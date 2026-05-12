@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <title>Уншлагын Аялал 🚀</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { --p: #6366f1; --s: #22c55e; --e: #ef4444; --bg: #fdfbff; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; width: 100%; max-width: 800px; border-radius: 25px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; }
+        
+        .lvl-badge { background: #e0e7ff; color: var(--p); padding: 5px 15px; border-radius: 15px; font-weight: bold; }
+        .score-txt { font-size: 48px; font-weight: 900; color: var(--p); margin: 10px 0; }
+
+        /* Эх текст */
+        .text-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 25px 0; min-height: 100px; }
+        .word-node { font-size: 28px; padding: 4px 8px; border-radius: 8px; color: #334155; transition: 0.4s; border-bottom: 3px solid #f1f5f9; }
+        .is-correct { color: var(--s) !important; border-bottom-color: var(--s); transform: translateY(-3px); font-weight: bold; }
+        .is-wrong { color: var(--e) !important; border-bottom-color: var(--e); opacity: 0.6; }
+
+        /* Сонсож буй текст */
+        .live-monitor { background: #0f172a; color: #38bdf8; padding: 20px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 18px; text-align: left; margin: 20px 0; min-height: 50px; word-break: break-all; border-left: 5px solid var(--p); }
+
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .btn { padding: 16px 30px; font-size: 16px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
+        .btn-mic { background: var(--p); box-shadow: 0 4px 0 #4338ca; }
+        .btn-check { background: var(--s); box-shadow: 0 4px 0 #15803d; display: none; }
+        .btn-mic.recording { background: var(--e); box-shadow: 0 4px 0 #991b1b; animation: blink 1s infinite; }
+
+        @keyframes blink { 50% { opacity: 0.7; } }
+
+        .log-section { margin-top: 30px; text-align: left; font-size: 13px; color: #64748b; border-top: 2px solid #f1f5f9; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="lvl-badge" id="lvlInfo">ТҮВШИН 1 / 15</div>
+    <div class="score-txt" id="scoreDisplay">0%</div>
+    <h2 id="title">Сэдэв</h2>
+
+    <div class="text-display" id="mainText"></div>
+
+    <div style="text-align: left; font-weight: bold; color: #94a3b8; font-size: 11px;">МИНИЙ УНШИЖ БУЙ БИЧВЭР:</div>
+    <div class="live-monitor" id="monitor">...</div>
+
+    <div class="btn-group">
+        <button id="micBtn" class="btn btn-mic">🎤 Уншиж эхлэх</button>
+        <button id="checkBtn" class="btn btn-check">✅ Шалгаад дараагийнх руу</button>
+    </div>
+
+    <div class="log-section">
+        <b></b>
+        <div id="historyContainer"></div>
+    </div>
+</div>
+
+<script>
+    const levels = [
+        { t: "Усны шувуу 👨‍👩‍👧‍👦", content: "Урин хавар ирлээ. Гол мөрөн, нуурын мөс хайлав. Халуун орноос усны шувууд ирлээ. Нуурын усанд нугас, хун, ангир, галуу гээд олон сайхан шувуу хөвнө. Галуу ганганан дуугарав." },
+        { t: "Богд уул 🚀", content: "Богд уул Улаанбаатар хотын өмнө оршдог. Эргэн тойрон 32 амтай. Богд ууланд ан амьтад, мод ургамал элбэг байдаг. Тэнд таван салаа, сөд гээд төрөл бүрийн эмийн ургамал ургадаг. Бас буга, үнэг, баавгай, хэрэм, дорго, туулай их бий. Хүн бүр Богд уулаа бишрэн хайрладаг." },
+        { t: "Үрц 🐶", content: "Цаатан ардууд тайгад нутагладаг. Цаатан хүмүүс урцанд амьдардаг. Урцыг модны гишүү болон өвсөөр барьдаг. Цаатнууд цаа бугыг уналгад ашиглана." },
+        { t: "Хичээл 🌸", content: "Манай анги гучин сурагчтай. Монгол хэлний хичээл орлоо. Бид ц үсэг сурч мэдсэн. Навчаа хичээл, чигчий, алчуур, өвчүү гэх мэт шинэ үгийг сайн уншлаа. Сурагч бүр Навчаа ном сурчээ гэсэн өгүүлбэр бичив." },
+        { t: "Зараа 🏫", content: "Зараа их тайван амьтан. Ихэнх зараа өдөр үүрэндээ унтана. Заримдаа зүлгэн дээр унтана. Заримдаа хадны доор унтана. Шөнө зөөлөн зөөлөн алхан идэш хоолоо хайдаг. Нүд нь муу хардаг. Харин үнэрлэх болон сонсохдоо их сайн. Зарааны амтат зоог." },
+        { t: "Жимсний зууш ☀️", content: "Ээж дэлгүүрээс олон төрлийн жимс авлаа. Мөнхжин алим угаав. Анужин гадил арилгав. Жаргалмаа жүрж хальслав. Энхжин жимсээ таваглав. Тэд ээждээ сайн тусалжээ. Ээж нь жимсний зууш хийв. Бүгд амтархан идэв." },
+        { t: "Яргуй 🍎", content: "Яргуй бол цэнхэр, шар өнгөтэй цэцэг. Шар яргуй уулын хярд ургадаг. Цэнхэр яргуй хээр тал, уулын бэлд ургана. Яргуйг эмийн ургамал болгон ашигладаг. Ямаа яргуйд дуртай. Яргуй идсэн ямаа сүү ихтэй байдаг." },
+        { t: "ОЮ үсэг🦊", content: "Ю үсэг Юндэн, Юмжав, Юмчин, Юмжир гэх мэт хүний нэрийн эхэнд байна. Бас ю үсэг нь Оюун, Аюур, Аюуш гэх мэт нэрийн дунд орно. Харин хүний нэрийн төгсгөлд орохгүй." },
+        { t: "Цирк 🌊", content: "Хүүхдүүд цирк үзэх дуртай. Циркэд маш сонирхолтой тоглолт болдог. Амьтад хүртэл үзүүлбэр үзүүлэх нь сонин. Циркийн алиалагч нар хамгийн хөгжилтэй." },
+        { t: "Миний эх орон 🇲🇳", content: "Монгол бол миний эх орон Өргөн уудам тал нутагтай Би эх орондоо маш их хайртай" },
+        { t: "Өвлийн баяр ❄️", content: "Гадаа цас орж байна Хүүхдүүд цасан хүн хийлээ Шинэ жил удахгүй болно" },
+        { t: "Ажилсаг зөгий 🐝", content: "Зөгий цэцэгнээс бал цуглуулдаг Тэд маш ажилсаг амьтад Зөгийн бал амттай бас тустай" },
+        { t: "Алтан намар 🍂", content: "Намар болж навчис шарлалаа Тариаланчид ургацаа хурааж байна Хүүхдүүд хичээлдээ орлоо" },
+        { t: "Номын ертөнц 📚", content: "Ном бол ертөнцийг харах цонх Би ном унших дуртай Номноос би олон зүйл сурдаг" },
+        { t: "Миний мөрөөдөл ✨", content: "Би ирээдүйд эмч болно Хүмүүст туслах нь миний мөрөөдөл Би хичээлээ шамдан сурдаг" }
+    ];
+
+    let currentLvl = 0;
+    let isRecording = false;
+    let finalTranscript = "";
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'mn-MN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    function loadLevel() {
+        const textContainer = document.getElementById('mainText');
+        textContainer.innerHTML = '';
+        const words = levels[currentLvl].content.split(" ");
+        words.forEach((w, i) => {
+            const span = document.createElement('span');
+            span.innerText = w;
+            span.className = 'word-node';
+            span.id = `word-${i}`;
+            textContainer.appendChild(span);
+        });
+
+        document.getElementById('title').innerText = levels[currentLvl].t;
+        document.getElementById('lvlInfo').innerText = `ТҮВШИН ${currentLvl + 1} / ${levels.length}`;
+        document.getElementById('monitor').innerText = "...";
+        document.getElementById('scoreDisplay').innerText = "0%";
+        document.getElementById('checkBtn').style.display = "none";
+        finalTranscript = "";
+    }
+
+    document.getElementById('micBtn').onclick = () => {
+        if (!isRecording) {
+            recognition.start();
+            isRecording = true;
+            document.getElementById('micBtn').classList.add('recording');
+            document.getElementById('micBtn').innerText = "⏹️ Зогсоох";
+            document.getElementById('checkBtn').style.display = "none";
+        } else {
+            recognition.stop();
+            isRecording = false;
+            document.getElementById('micBtn').classList.remove('recording');
+            document.getElementById('micBtn').innerText = "🎤 Дахин унших";
+            document.getElementById('checkBtn').style.display = "inline-block";
+        }
+    };
+
+    recognition.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const text = event.results[i][0].transcript.toLowerCase();
+            if (event.results[i].isFinal) finalTranscript += text + " ";
+            interim += text;
+        }
+        document.getElementById('monitor').innerText = finalTranscript + interim;
+    };
+
+    document.getElementById('checkBtn').onclick = () => {
+        const originalWords = levels[currentLvl].content.split(" ");
+        const spokenCombined = document.getElementById('monitor').innerText.toLowerCase();
+        let correctCount = 0;
+
+        originalWords.forEach((word, i) => {
+            const target = word.toLowerCase().replace(/[.,!]/g, "");
+            const span = document.getElementById(`word-${i}`);
+
+            // Үсгээр шүүж шалгах логик
+            if (spokenCombined.includes(target)) {
+                span.className = 'word-node is-correct';
+                correctCount++;
+            } else {
+                span.className = 'word-node is-wrong';
+            }
+        });
+
+        const score = Math.round((correctCount / originalWords.length) * 100);
+        document.getElementById('scoreDisplay').innerText = score + "%";
+
+        saveToLocal(score);
+
+        if (score >= 60) {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            setTimeout(nextLevel, 2500);
+        } else {
+            alert("Жаахан хичээгээд, дахин нэг тод уншаарай! 😊");
+        }
+    };
+
+    function nextLevel() {
+        currentLvl++;
+        if (currentLvl >= levels.length) {
+            alert("Баяр хүргэе! Та бүх 15 түвшнийг дуусгалаа. 🎉");
+            currentLvl = 0;
+        }
+        loadLevel();
+    }
+
+    function saveToLocal(score) {
+        const history = JSON.parse(localStorage.getItem('reading_history_v2') || "[]");
+        const log = {
+            time: new Date().toLocaleTimeString(),
+            topic: levels[currentLvl].t,
+            score: score + "%",
+            text: document.getElementById('monitor').innerText
+        };
+        history.unshift(log);
+        localStorage.setItem('reading_history_v2', JSON.stringify(history.slice(0, 10)));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('reading_history_v2') || "[]");
+        document.getElementById('historyContainer').innerHTML = history.map(h => `
+            <div style="border-bottom: 1px solid #f1f5f9; padding: 8px 0;">
+                <b>${h.topic} - ${h.score}</b> <small>(${h.time})</small><br>
+                <span style="color: #94a3b8; font-style: italic;">"${h.text}"</span>
+            </div>
+        `).join("");
+    }
+
+    loadLevel();
+    renderHistory();
+</script>
+
+</body>
+</html>
