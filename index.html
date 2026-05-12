@@ -2,34 +2,127 @@
 <html lang="mn">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Уншлагын Аялал 🚀</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --p: #6366f1; --s: #22c55e; --e: #ef4444; --bg: #fdfbff; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; width: 100%; max-width: 800px; border-radius: 25px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; }
+        :root { --p: #6366f1; --s: #22c55e; --e: #ef4444; --bg: #f8fafc; }
         
-        .lvl-badge { background: #e0e7ff; color: var(--p); padding: 5px 15px; border-radius: 15px; font-weight: bold; }
-        .score-txt { font-size: 48px; font-weight: 900; color: var(--p); margin: 10px 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: var(--bg); 
+            margin: 0;
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh;
+        }
 
-        /* Эх текст */
-        .text-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 25px 0; min-height: 100px; }
-        .word-node { font-size: 28px; padding: 4px 8px; border-radius: 8px; color: #334155; transition: 0.4s; border-bottom: 3px solid #f1f5f9; }
-        .is-correct { color: var(--s) !important; border-bottom-color: var(--s); transform: translateY(-3px); font-weight: bold; }
-        .is-wrong { color: var(--e) !important; border-bottom-color: var(--e); opacity: 0.6; }
+        /* Үндсэн контейнер - PC дээр өргөн харагдана */
+        .container { 
+            background: white; 
+            width: 100%; 
+            max-width: 900px; 
+            margin: 20px;
+            border-radius: 30px; 
+            padding: 40px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05); 
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
 
-        /* Сонсож буй текст */
-        .live-monitor { background: #0f172a; color: #38bdf8; padding: 20px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 18px; text-align: left; margin: 20px 0; min-height: 50px; word-break: break-all; border-left: 5px solid var(--p); }
+        /* ГАР УТАСНЫ ТОХИРГОО (600px-ээс бага дэлгэцтэй үед) */
+        @media (max-width: 600px) {
+            .container { margin: 10px; padding: 20px; border-radius: 20px; }
+            .score-txt { font-size: 45px !important; }
+            .word-node { font-size: 24px !important; }
+            .btn { width: 100% !important; margin: 8px 0 !important; font-size: 18px !important; padding: 18px !important; }
+            .live-monitor { font-size: 16px !important; min-height: 50px !important; }
+        }
+        
+        .lvl-badge { background: #e0e7ff; color: var(--p); padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block; align-self: center; }
+        .score-txt { font-size: 65px; font-weight: 900; color: var(--p); margin: 10px 0; }
 
-        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
-        .btn { padding: 16px 30px; font-size: 16px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
-        .btn-mic { background: var(--p); box-shadow: 0 4px 0 #4338ca; }
-        .btn-check { background: var(--s); box-shadow: 0 4px 0 #15803d; display: none; }
-        .btn-mic.recording { background: var(--e); box-shadow: 0 4px 0 #991b1b; animation: blink 1s infinite; }
+        /* Эх текст харуулах хэсэг */
+        .text-display { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 10px; 
+            margin: 25px 0; 
+            padding: 20px;
+            background: #fdfbff;
+            border-radius: 20px;
+            min-height: 120px; 
+        }
+        .word-node { 
+            font-size: 36px; 
+            padding: 2px 8px; 
+            border-radius: 8px; 
+            color: #334155; 
+            border-bottom: 4px solid #f1f5f9;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .is-correct { color: var(--s) !important; border-bottom-color: var(--s) !important; transform: scale(1.05); font-weight: bold; }
+        .is-wrong { color: var(--e) !important; border-bottom-color: var(--e) !important; opacity: 0.5; }
 
-        @keyframes blink { 50% { opacity: 0.7; } }
+        /* Сонсож буй текст - Monitor */
+        .live-monitor { 
+            background: #0f172a; 
+            color: #38bdf8; 
+            padding: 20px; 
+            border-radius: 15px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 20px; 
+            text-align: left; 
+            margin: 20px 0; 
+            min-height: 70px; 
+            border-left: 6px solid var(--p);
+            word-break: break-word;
+        }
 
-        .log-section { margin-top: 30px; text-align: left; font-size: 13px; color: #64748b; border-top: 2px solid #f1f5f9; padding-top: 20px; }
+        /* Товчлуурууд */
+        .btn-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+        .btn { 
+            padding: 20px 45px; 
+            font-size: 20px; 
+            border-radius: 50px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s; 
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-mic { background: var(--p); box-shadow: 0 6px 0 #4338ca; }
+        .btn-check { background: var(--s); box-shadow: 0 6px 0 #15803d; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
+        
+        .btn-mic.recording { 
+            background: var(--e); 
+            box-shadow: 0 6px 0 #991b1b; 
+            animation: pulse 1.5s infinite; 
+        }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        /* Түүх хадгалах хэсэг */
+        .log-section { 
+            margin-top: 40px; 
+            text-align: left; 
+            font-size: 13px; 
+            color: #64748b; 
+            border-top: 2px solid #f1f5f9; 
+            padding-top: 20px;
+        }
+        .history-item { border-bottom: 1px solid #f1f5f9; padding: 10px 0; display: flex; justify-content: space-between; }
+        
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -37,57 +130,70 @@
 <div class="container">
     <div class="lvl-badge" id="lvlInfo">ТҮВШИН 1 / 15</div>
     <div class="score-txt" id="scoreDisplay">0%</div>
-    <h2 id="title">Сэдэв</h2>
+    <h2 id="title" style="margin: 5px 0;">Уншлагын Даалгавар</h2>
 
     <div class="text-display" id="mainText"></div>
 
-    <div style="text-align: left; font-weight: bold; color: #94a3b8; font-size: 11px;">МИНИЙ УНШИЖ БУЙ БИЧВЭР:</div>
+    <div style="text-align: left; font-weight: bold; color: #94a3b8; font-size: 11px; padding-left: 5px;">МИНИЙ УНШИЖ БУЙ ТЕКСТ:</div>
     <div class="live-monitor" id="monitor">...</div>
 
     <div class="btn-group">
         <button id="micBtn" class="btn btn-mic">🎤 Уншиж эхлэх</button>
-        <button id="checkBtn" class="btn btn-check">✅ Шалгаад дараагийнх руу</button>
+        <button id="checkBtn" class="btn btn-check hidden">✅ Шалгаад дараагийнх руу</button>
     </div>
 
     <div class="log-section">
-        <b></b>
+        <b>📜 Сүүлийн 5 оролдлого:</b>
         <div id="historyContainer"></div>
     </div>
 </div>
 
 <script>
     const levels = [
-        { t: "Усны шувуу 👨‍👩‍👧‍👦", content: "Урин хавар ирлээ. Гол мөрөн, нуурын мөс хайлав. Халуун орноос усны шувууд ирлээ. Нуурын усанд нугас, хун, ангир, галуу гээд олон сайхан шувуу хөвнө. Галуу ганганан дуугарав." },
-        { t: "Богд уул 🚀", content: "Богд уул Улаанбаатар хотын өмнө оршдог. Эргэн тойрон 32 амтай. Богд ууланд ан амьтад, мод ургамал элбэг байдаг. Тэнд таван салаа, сөд гээд төрөл бүрийн эмийн ургамал ургадаг. Бас буга, үнэг, баавгай, хэрэм, дорго, туулай их бий. Хүн бүр Богд уулаа бишрэн хайрладаг." },
-        { t: "Үрц 🐶", content: "Цаатан ардууд тайгад нутагладаг. Цаатан хүмүүс урцанд амьдардаг. Урцыг модны гишүү болон өвсөөр барьдаг. Цаатнууд цаа бугыг уналгад ашиглана." },
-        { t: "Хичээл 🌸", content: "Манай анги гучин сурагчтай. Монгол хэлний хичээл орлоо. Бид ц үсэг сурч мэдсэн. Навчаа хичээл, чигчий, алчуур, өвчүү гэх мэт шинэ үгийг сайн уншлаа. Сурагч бүр Навчаа ном сурчээ гэсэн өгүүлбэр бичив." },
-        { t: "Зараа 🏫", content: "Зараа их тайван амьтан. Ихэнх зараа өдөр үүрэндээ унтана. Заримдаа зүлгэн дээр унтана. Заримдаа хадны доор унтана. Шөнө зөөлөн зөөлөн алхан идэш хоолоо хайдаг. Нүд нь муу хардаг. Харин үнэрлэх болон сонсохдоо их сайн. Зарааны амтат зоог." },
-        { t: "Жимсний зууш ☀️", content: "Ээж дэлгүүрээс олон төрлийн жимс авлаа. Мөнхжин алим угаав. Анужин гадил арилгав. Жаргалмаа жүрж хальслав. Энхжин жимсээ таваглав. Тэд ээждээ сайн тусалжээ. Ээж нь жимсний зууш хийв. Бүгд амтархан идэв." },
-        { t: "Яргуй 🍎", content: "Яргуй бол цэнхэр, шар өнгөтэй цэцэг. Шар яргуй уулын хярд ургадаг. Цэнхэр яргуй хээр тал, уулын бэлд ургана. Яргуйг эмийн ургамал болгон ашигладаг. Ямаа яргуйд дуртай. Яргуй идсэн ямаа сүү ихтэй байдаг." },
-        { t: "ОЮ үсэг🦊", content: "Ю үсэг Юндэн, Юмжав, Юмчин, Юмжир гэх мэт хүний нэрийн эхэнд байна. Бас ю үсэг нь Оюун, Аюур, Аюуш гэх мэт нэрийн дунд орно. Харин хүний нэрийн төгсгөлд орохгүй." },
-        { t: "Цирк 🌊", content: "Хүүхдүүд цирк үзэх дуртай. Циркэд маш сонирхолтой тоглолт болдог. Амьтад хүртэл үзүүлбэр үзүүлэх нь сонин. Циркийн алиалагч нар хамгийн хөгжилтэй." },
-        { t: "Миний эх орон 🇲🇳", content: "Монгол бол миний эх орон Өргөн уудам тал нутагтай Би эх орондоо маш их хайртай" },
-        { t: "Өвлийн баяр ❄️", content: "Гадаа цас орж байна Хүүхдүүд цасан хүн хийлээ Шинэ жил удахгүй болно" },
-        { t: "Ажилсаг зөгий 🐝", content: "Зөгий цэцэгнээс бал цуглуулдаг Тэд маш ажилсаг амьтад Зөгийн бал амттай бас тустай" },
-        { t: "Алтан намар 🍂", content: "Намар болж навчис шарлалаа Тариаланчид ургацаа хурааж байна Хүүхдүүд хичээлдээ орлоо" },
-        { t: "Номын ертөнц 📚", content: "Ном бол ертөнцийг харах цонх Би ном унших дуртай Номноос би олон зүйл сурдаг" },
-        { t: "Миний мөрөөдөл ✨", content: "Би ирээдүйд эмч болно Хүмүүст туслах нь миний мөрөөдөл Би хичээлээ шамдан сурдаг" }
+        { t: "Усны шувуу 🦆", content: "Урин хавар ирлээ Гол мөрөн нуурын мөс хайлав" },
+        { t: "Богд уул 🏔️", content: "Богд уул Улаанбаатар хотын өмнө оршдог" },
+        { t: "Зараа 🦔", content: "Зараа их тайван амьтан Харин үнэрлэхдээ их сайн" },
+        { t: "Жимсний зууш 🍎", content: "Ээж дэлгүүрээс олон төрлийн жимс авлаа" },
+        { t: "Эх орон 🇲🇳", content: "Монгол бол миний эх орон Би эх орондоо хайртай" }
+        // Энд нэмэлт түвшнүүдээ өмнөх шигээ нэмж болно
     ];
 
     let currentLvl = 0;
     let isRecording = false;
     let finalTranscript = "";
+    let recognition;
 
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'mn-MN';
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    // Speech Recognition Setup (PC & Mobile)
+    try {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'mn-MN';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onresult = (event) => {
+            let interim = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const text = event.results[i][0].transcript.toLowerCase();
+                if (event.results[i].isFinal) finalTranscript += text + " ";
+                interim += text;
+            }
+            document.getElementById('monitor').innerText = finalTranscript + interim;
+        };
+
+        recognition.onerror = (e) => {
+            if(e.error === 'not-allowed') alert("Микрофон ашиглах эрх өгнө үү!");
+            isRecording = false;
+            updateUI();
+        };
+    } catch (e) {
+        alert("Таны хөтөч дуу таних функцийг дэмжихгүй байна.");
+    }
 
     function loadLevel() {
         const textContainer = document.getElementById('mainText');
         textContainer.innerHTML = '';
-        const words = levels[currentLvl].content.split(" ");
-        words.forEach((w, i) => {
+        levels[currentLvl].content.split(" ").forEach((w, i) => {
             const span = document.createElement('span');
             span.innerText = w;
             span.className = 'word-node';
@@ -97,36 +203,37 @@
 
         document.getElementById('title').innerText = levels[currentLvl].t;
         document.getElementById('lvlInfo').innerText = `ТҮВШИН ${currentLvl + 1} / ${levels.length}`;
-        document.getElementById('monitor').innerText = "...";
         document.getElementById('scoreDisplay').innerText = "0%";
-        document.getElementById('checkBtn').style.display = "none";
+        document.getElementById('monitor').innerText = "Бэлэн...";
+        document.getElementById('checkBtn').classList.add('hidden');
+        document.getElementById('micBtn').classList.remove('hidden');
         finalTranscript = "";
+        updateUI();
+    }
+
+    function updateUI() {
+        const btn = document.getElementById('micBtn');
+        if (isRecording) {
+            btn.classList.add('recording');
+            btn.innerText = "⏹️ Зогсоох";
+        } else {
+            btn.classList.remove('recording');
+            btn.innerText = "🎤 Уншиж эхлэх";
+        }
     }
 
     document.getElementById('micBtn').onclick = () => {
         if (!isRecording) {
+            finalTranscript = "";
             recognition.start();
             isRecording = true;
-            document.getElementById('micBtn').classList.add('recording');
-            document.getElementById('micBtn').innerText = "⏹️ Зогсоох";
-            document.getElementById('checkBtn').style.display = "none";
         } else {
             recognition.stop();
             isRecording = false;
-            document.getElementById('micBtn').classList.remove('recording');
-            document.getElementById('micBtn').innerText = "🎤 Дахин унших";
-            document.getElementById('checkBtn').style.display = "inline-block";
+            document.getElementById('micBtn').classList.add('hidden');
+            document.getElementById('checkBtn').classList.remove('hidden');
         }
-    };
-
-    recognition.onresult = (event) => {
-        let interim = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const text = event.results[i][0].transcript.toLowerCase();
-            if (event.results[i].isFinal) finalTranscript += text + " ";
-            interim += text;
-        }
-        document.getElementById('monitor').innerText = finalTranscript + interim;
+        updateUI();
     };
 
     document.getElementById('checkBtn').onclick = () => {
@@ -138,7 +245,6 @@
             const target = word.toLowerCase().replace(/[.,!]/g, "");
             const span = document.getElementById(`word-${i}`);
 
-            // Үсгээр шүүж шалгах логик
             if (spokenCombined.includes(target)) {
                 span.className = 'word-node is-correct';
                 correctCount++;
@@ -156,38 +262,35 @@
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             setTimeout(nextLevel, 2500);
         } else {
-            alert("Жаахан хичээгээд, дахин нэг тод уншаарай! 😊");
+            alert("Оноо бага байна, дахин оролдоорой! 😊");
+            document.getElementById('checkBtn').classList.add('hidden');
+            document.getElementById('micBtn').classList.remove('hidden');
         }
     };
 
     function nextLevel() {
-        currentLvl++;
-        if (currentLvl >= levels.length) {
-            alert("Баяр хүргэе! Та бүх 15 түвшнийг дуусгалаа. 🎉");
-            currentLvl = 0;
-        }
+        currentLvl = (currentLvl + 1) % levels.length;
         loadLevel();
     }
 
     function saveToLocal(score) {
-        const history = JSON.parse(localStorage.getItem('reading_history_v2') || "[]");
-        const log = {
-            time: new Date().toLocaleTimeString(),
+        const history = JSON.parse(localStorage.getItem('reading_pro_history') || "[]");
+        history.unshift({
             topic: levels[currentLvl].t,
             score: score + "%",
-            text: document.getElementById('monitor').innerText
-        };
-        history.unshift(log);
-        localStorage.setItem('reading_history_v2', JSON.stringify(history.slice(0, 10)));
+            time: new Date().toLocaleTimeString()
+        });
+        localStorage.setItem('reading_pro_history', JSON.stringify(history.slice(0, 5)));
         renderHistory();
     }
 
     function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('reading_history_v2') || "[]");
+        const history = JSON.parse(localStorage.getItem('reading_pro_history') || "[]");
         document.getElementById('historyContainer').innerHTML = history.map(h => `
-            <div style="border-bottom: 1px solid #f1f5f9; padding: 8px 0;">
-                <b>${h.topic} - ${h.score}</b> <small>(${h.time})</small><br>
-                <span style="color: #94a3b8; font-style: italic;">"${h.text}"</span>
+            <div class="history-item">
+                <span><b>${h.topic}</b></span>
+                <span style="color:var(--p)">${h.score}</span>
+                <small>${h.time}</small>
             </div>
         `).join("");
     }
