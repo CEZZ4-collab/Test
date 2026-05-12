@@ -5,26 +5,25 @@
     <title>Уншлагын Аялал 🚀</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --p: #6366f1; --s: #22c55e; --e: #ef4444; --bg: #fdfbff; }
+        :root { --p: #6366f1; --s: #22c55e; --e: #ef4444; --bg: #fdfbff; --gray: #94a3b8; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
         .container { background: white; width: 100%; max-width: 800px; border-radius: 25px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; }
         
         .lvl-badge { background: #e0e7ff; color: var(--p); padding: 5px 15px; border-radius: 15px; font-weight: bold; }
         .score-txt { font-size: 48px; font-weight: 900; color: var(--p); margin: 10px 0; }
 
-        /* Эх текст */
         .text-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 25px 0; min-height: 100px; }
         .word-node { font-size: 28px; padding: 4px 8px; border-radius: 8px; color: #334155; transition: 0.4s; border-bottom: 3px solid #f1f5f9; }
         .is-correct { color: var(--s) !important; border-bottom-color: var(--s); transform: translateY(-3px); font-weight: bold; }
         .is-wrong { color: var(--e) !important; border-bottom-color: var(--e); opacity: 0.6; }
 
-        /* Сонсож буй текст */
         .live-monitor { background: #0f172a; color: #38bdf8; padding: 20px; border-radius: 15px; font-family: 'Courier New', monospace; font-size: 18px; text-align: left; margin: 20px 0; min-height: 50px; word-break: break-all; border-left: 5px solid var(--p); }
 
-        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
         .btn { padding: 16px 30px; font-size: 16px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; }
         .btn-mic { background: var(--p); box-shadow: 0 4px 0 #4338ca; }
         .btn-check { background: var(--s); box-shadow: 0 4px 0 #15803d; display: none; }
+        .btn-nav { background: var(--gray); box-shadow: 0 4px 0 #64748b; }
         .btn-mic.recording { background: var(--e); box-shadow: 0 4px 0 #991b1b; animation: blink 1s infinite; }
 
         @keyframes blink { 50% { opacity: 0.7; } }
@@ -45,12 +44,14 @@
     <div class="live-monitor" id="monitor">...</div>
 
     <div class="btn-group">
+        <button id="prevBtn" class="btn btn-nav">⏪ Өмнөх</button>
         <button id="micBtn" class="btn btn-mic">🎤 Уншиж эхлэх</button>
         <button id="checkBtn" class="btn btn-check">✅ Шалгаад дараагийнх руу</button>
+        <button id="nextBtn" class="btn btn-nav">Дараах ⏩</button>
     </div>
 
     <div class="log-section">
-        <b></b>
+        <b>Түүх:</b>
         <div id="historyContainer"></div>
     </div>
 </div>
@@ -119,6 +120,19 @@
         }
     };
 
+    // ШИЛЖИХ ТОВЧНУУДЫН ЛОГИК
+    document.getElementById('nextBtn').onclick = () => {
+        currentLvl++;
+        if (currentLvl >= levels.length) currentLvl = 0;
+        loadLevel();
+    };
+
+    document.getElementById('prevBtn').onclick = () => {
+        currentLvl--;
+        if (currentLvl < 0) currentLvl = levels.length - 1;
+        loadLevel();
+    };
+
     recognition.onresult = (event) => {
         let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -138,7 +152,6 @@
             const target = word.toLowerCase().replace(/[.,!]/g, "");
             const span = document.getElementById(`word-${i}`);
 
-            // Үсгээр шүүж шалгах логик
             if (spokenCombined.includes(target)) {
                 span.className = 'word-node is-correct';
                 correctCount++;
@@ -154,19 +167,34 @@
 
         if (score >= 60) {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            setTimeout(nextLevel, 2500);
+            setTimeout(() => {
+                currentLvl++;
+                if (currentLvl >= levels.length) currentLvl = 0;
+                loadLevel();
+            }, 2500);
         } else {
             alert("Жаахан хичээгээд, дахин нэг тод уншаарай! 😊");
         }
     };
 
-    function nextLevel() {
-        currentLvl++;
-        if (currentLvl >= levels.length) {
-            alert("Баяр хүргэе! Та бүх 15 түвшнийг дуусгалаа. 🎉");
-            currentLvl = 0;
-        }
-        loadLevel();
+    function loadLevel() {
+        const textContainer = document.getElementById('mainText');
+        textContainer.innerHTML = '';
+        const words = levels[currentLvl].content.split(" ");
+        words.forEach((w, i) => {
+            const span = document.createElement('span');
+            span.innerText = w;
+            span.className = 'word-node';
+            span.id = `word-${i}`;
+            textContainer.appendChild(span);
+        });
+
+        document.getElementById('title').innerText = levels[currentLvl].t;
+        document.getElementById('lvlInfo').innerText = `ТҮВШИН ${currentLvl + 1} / ${levels.length}`;
+        document.getElementById('monitor').innerText = "...";
+        document.getElementById('scoreDisplay').innerText = "0%";
+        document.getElementById('checkBtn').style.display = "none";
+        finalTranscript = "";
     }
 
     function saveToLocal(score) {
